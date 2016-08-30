@@ -32,6 +32,13 @@ try {
     Write-Host "[JobType] -> $JobType"
     Write-Host "[UserName] -> $UserName"
 
+    Write-Host "Checking the current status of the job"
+    $response = Invoke-RestMethod $getrequest.Trim() -Headers $headers -ContentType 'application/json' -Method Get
+    if ($response.status -eq $JobState) {
+        Write-host "The Job is currently $JobState."
+        exit 0
+    }
+
     Write-Host "$JobState Job $MyJobName"
     $postRequest = [string]::Format($requestUribase, $AzureWebAppName, $MyJobType, $MyJobName,$JobState.ToLower())
     $getRequest = [string]::Format($requestUribase, $AzureWebAppName, $MyJobType, $MyJobName,"")
