@@ -4,7 +4,7 @@
   "friendlyName": "Web Job Tools",
   "description": "Set of Tools to manipulate Web Jobs in AzureRM",
   "author": "Darnell McMurrian",
-  "helpMarkDown": "Replace with markdown to show in help",
+  "helpMarkDown": "Replace with markdown to show in help ",
   "category": "Deploy",
   "visibility": [
     "Build",
