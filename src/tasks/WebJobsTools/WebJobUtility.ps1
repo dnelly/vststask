@@ -15,7 +15,6 @@ try {
 
     [string]$JobName = Get-VstsInput -Name JobName -Require
     [string]$AzureWebAppName = Get-VstsInput -Name AzureWebAppName -Require
-    # [bool]$StartJob = Get-VstsInput -Name StartJob
     # [bool]$StopJob = Get-VstsInput -Name StopJob
     [string]$JobState = Get-VstsInput -Name JobState
     [string]$JobType = Get-VstsInput -Name JobType -Require
@@ -41,7 +40,8 @@ try {
 
     Write-Host "Checking the current status of the job"
     $response = Invoke-RestMethod $getrequest.Trim() -Headers $headers -ContentType 'application/json' -Method Get
-    if ($response.status -eq $JobState) {
+    $status = $response.status
+    if ($status -eq $JobState) {
         Write-host "The Job is currently $JobState."
         exit 0
     }
@@ -49,7 +49,16 @@ try {
     Write-host "Processing current request for URI"
     Write-Host $postRequest
     $response = Invoke-RestMethod $postRequest -Headers $headers -ContentType 'application/json' -Method Post
+    start-sleep -Seconds 5
     Write-Host "Getting the status of $Jobname"
+    $response =  Invoke-RestMethod $getrequest.Trim() -Headers $headers -ContentType 'application/json' -Method Get
+    $status = $response.status
+    while (($status -ne "Running") -and ($status -ne "Stopped")) {
+        $status = $response.status
+        write-host "Current Status $status"
+        $response =  Invoke-RestMethod $getrequest.Trim() -Headers $headers -ContentType 'application/json' -Method Get
+    }
+
     Invoke-RestMethod $getrequest.Trim() -Headers $headers -ContentType 'application/json' -Method Get
 
 } finally {
