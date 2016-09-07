@@ -25,11 +25,11 @@ try {
     $headers.Add("Authorization", [string]::Format('Basic {0}',$token))
     $requestUribase = 'https://{0}.scm.azurewebsites.net/api/{1}webjobs/{2}/{3}'
 
-    Write-Host "[JobName] -> $JobName"
-    Write-Host "[AzureWebAppName] -> $AzureWebAppName"
-    Write-Host "[JobState] -> $JobState"
-    Write-Host "[JobType] -> $JobType"
-    Write-Host "[UserName] -> $UserName"
+    Write-Host "[JobName] ->            $JobName"
+    Write-Host "[AzureWebAppName] ->    $AzureWebAppName"
+    Write-Host "[JobState] ->           $JobState"
+    Write-Host "[JobType] ->            $JobType"
+    Write-Host "[UserName] ->           $UserName"
 
 
 
