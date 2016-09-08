@@ -17,6 +17,12 @@ try {
     [string]$ResourceGroup = Get-VstsInput -Name ResourceGroupName -Require
     [string]$TransformConfigFile = Get-VstsInput -Name TransformConfigFile -Require
     [string]$Slot = Get-VstsInput -Name SlotName -Require
+
+    Write-Host "Web App ame ->                  $WebAppName"
+    Write-Host "Current Working directory ->    $cwd"
+    Write-Host "Resource Group ->               $ResourceGroup"
+    Write-Host "Transform Config File ->        $TransformConfigFile"
+    Write-Host "Slot Name ->                    $Slot"
     
     write-host "Initializing Azure"
     Import-Module $PSScriptRoot\ps_modules\VstsAzureHelpers_
