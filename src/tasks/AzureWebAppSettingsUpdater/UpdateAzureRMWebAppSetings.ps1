@@ -17,12 +17,16 @@ try {
     [string]$ResourceGroup = Get-VstsInput -Name ResourceGroupName -Require
     [string]$TransformConfigFile = Get-VstsInput -Name TransformConfigFile -Require
     [string]$Slot = Get-VstsInput -Name SlotName -Require
+    [string]$SourceSlotName = Get-VstsInput -Name SourceSlotName
+    [string]$SwapSlots = Get-VstsInput -Name SwapSlots
 
     Write-Host "Web App ame ->                  $WebAppName"
     Write-Host "Current Working directory ->    $cwd"
     Write-Host "Resource Group ->               $ResourceGroup"
     Write-Host "Transform Config File ->        $TransformConfigFile"
     Write-Host "Slot Name ->                    $Slot"
+    Write-Host "Source Slot Name ->             $SourceSlotName"
+    Write-Host "Swap Slots ->                   $SwapSlots"
     
     write-host "Initializing Azure"
     Import-Module $PSScriptRoot\ps_modules\VstsAzureHelpers_
@@ -57,7 +61,7 @@ try {
     foreach($setting in $configContent.configuration.connectionStrings.add)
     {
         $connectionType = "Custom"
-        if($setting.name -eq "FlowEntities")
+        if($setting.name -eq "QueryTool")
         {
             $connectionType = "SqlServer"
         }
@@ -77,6 +81,13 @@ try {
 
     echo $results
 
+    if ($SwapSlots -eq "true") {
+        Write-Host "Beginning the Slot swap"
+        Swap-AzureRmWebAppSlot -Name $WebAppName -ResourceGroupName $ResourceGroup -SourceSlotName $SourceSlotName -DestinationSlotName $Slot -verbose -Confirm
+    }
+    else {
+        Write-Host "Skipping Slot swap"
+    }
 
 
 } finally {

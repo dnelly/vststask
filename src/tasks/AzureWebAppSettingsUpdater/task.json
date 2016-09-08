@@ -1,8 +1,8 @@
 {
   "id": "a543d4a0-74fe-11e6-80fa-3be82713805c",
-  "name": "AzureWebAppSettingsUpdater",
-  "friendlyName": "Azure Web App Settings Updater",
-  "description": "Parse Web config and update slot settings with it.",
+  "name": "AzureWebAppSlotManager",
+  "friendlyName": "Azure Web App Slot Manager",
+  "description": "Parse update slot settings web config and swap slots.",
   "author": "Darnell McMurrian",
   "helpMarkDown": "Replace with markdown to show in help",
   "category": "Deploy",
@@ -13,8 +13,8 @@
   "demands": [],
   "version": {
     "Major": "0",
-    "Minor": "2",
-    "Patch": "21"
+    "Minor": "3",
+    "Patch": "4"
   },
   "minimumAgentVersion": "1.102.0",
   "instanceNameFormat": "AzureWebAppSettingsUpdater $(message)",
@@ -58,14 +58,14 @@
       "properties": {
         "EditableOptions": "True"
       },
-      "helpMarkDown": "Enter or Select an existing Slot other than the Production slot."
+      "helpMarkDown": "Enter or Select an existing Slot.  This will also be used as the destination slot for swap"
     },
     {
       "name": "cwd",
       "type": "filePath",
       "label": "Working Directory",
       "defaultValue": "",
-      "required": false,
+      "required": true,
       "helpMarkDown": "Current working directory when AzureWebAppSettingsUpdater is run."
     },
     {
@@ -73,8 +73,28 @@
       "type": "string",
       "label": "Transformation Configuration File",
       "defaultValue": "",
-      "required": false,
+      "required": true,
       "helpMarkDown": "The transformation file used for the deployment slot."
+    },
+    {
+      "name": "SwapSlots",
+      "type": "boolean",
+      "label": "Enable Slots Swaps",
+      "defaultValue": "",
+      "required": false,
+      "helpMarkDown": "Check this box if you want to swap the slots"
+    },
+    {
+      "name": "SourceSlotName",
+      "type": "pickList",
+      "label": "Source Slot Name",
+      "defaultValue": "",
+      "required": false,
+      "properties": {
+        "EditableOptions": "True"
+      },
+      "helpMarkDown": "This slot will be used that the source slot to use for swapping.",
+      "visibleRule": "SwapSlots = true"
     }
   ],
   "dataSourceBindings": [
@@ -93,6 +113,16 @@
     },
     {
       "target": "SlotName",
+      "endpointId": "$(ConnectedServiceName)",
+      "dataSourceName": "AzureRMWebAppSlotsId",
+      "parameters": {
+        "WebAppName": "$(WebAppName)",
+        "ResourceGroupName": "$(ResourceGroupName)"
+      },
+      "resultTemplate": "{\"Value\":\"{{{ #extractResource slots}}}\",\"DisplayValue\":\"{{{ #extractResource slots}}}\"}"
+    },
+    {
+      "target": "SourceSlotName",
       "endpointId": "$(ConnectedServiceName)",
       "dataSourceName": "AzureRMWebAppSlotsId",
       "parameters": {
