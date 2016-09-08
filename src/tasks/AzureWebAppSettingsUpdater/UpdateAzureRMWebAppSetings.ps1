@@ -1,6 +1,7 @@
 [CmdletBinding()]
 param()
 
+Write-Host "Starting Updates."
 # For more information on the VSTS Task SDK:
 # https://github.com/Microsoft/vsts-task-lib
 Trace-VstsEnteringInvocation $MyInvocation
@@ -8,40 +9,45 @@ try {
     # Set the working directory.
     $cwd = Get-VstsInput -Name cwd -Require
     Assert-VstsPath -LiteralPath $cwd -PathType Container
-    Write-Verbose "Setting working directory to '$cwd'."
+    Write-Host "Setting working directory to '$cwd'."
     Set-Location $cwd
 
+    write-host "Getting variables"
     [string]$WebAppName = Get-VstsInput -Name WebAppName -Require
     [string]$ResourceGroup = Get-VstsInput -Name ResourceGroupName -Require
     [string]$TransformConfigFile = Get-VstsInput -Name TransformConfigFile -Require
     [string]$Slot = Get-VstsInput -Name SlotName -Require
     
+    write-host "Initializing Azure"
     Import-Module $PSScriptRoot\ps_modules\VstsAzureHelpers_
     Initialize-Azure
 
+    write-host "Importing the Task.Json file"
 	# Import the loc strings.
 	Import-VstsLocStrings -LiteralPath $PSScriptRoot/Task.json
 
-    $projectPath = New-Object System.IO.DirectoryInfo $cwd
-
-
-    $configs = $projectPath.GetFiles($TransformConfigFile)
-    $configContent = [XML](Get-Content $configs[1].FullName)
+    write-host "Getting Config content"
+    $configs = Get-ChildItem -Path . -Filter $TransformConfigFile -File
+    $configContent = [XML](Get-Content $configs)
 
     $appsettingsHash = @{}
     $appsettingsNames = @()
     $connections = @{}
     $connectionNames = @()
 
+    write-host "Starting Appsettings"
+    echo $configContent.configuration.appSettings.add
     foreach($setting in $configContent.configuration.appSettings.add)
     {
         $appsettingsHash.Add($setting.key,$setting.value)
         $appsettingsNames =$appsettingsNames + $setting.key
     }
 
+    write-host "Finished Appsettings"
     echo $appsettingsHash
 
-
+    write-host "Starting Conectionstrings"
+    echo $configContent.configuration.connectionStrings.add
     foreach($setting in $configContent.configuration.connectionStrings.add)
     {
         $connectionType = "Custom"
@@ -53,6 +59,7 @@ try {
         $connections[$setting.name] = @{Type = $connectionType;Value = $setting.connectionString}
         $connectionNames = $connectionNames + $setting.name
     }
+    write-host "Finished Parsing ConnectionString"
     echo $connections
 
 
