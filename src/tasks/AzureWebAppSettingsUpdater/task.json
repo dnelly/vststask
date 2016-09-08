@@ -10,14 +10,23 @@
     "Build",
     "Release"
   ],
-  "demands": [],
+  "demands": [
+    "AzurePS -equals 2.0.1"
+  ],
   "version": {
-    "Major": "0",
-    "Minor": "3",
-    "Patch": "9"
+    "Major": "1",
+    "Minor": "0",
+    "Patch": "0"
   },
   "minimumAgentVersion": "1.102.0",
   "instanceNameFormat": "AzureWebAppSettingsUpdater $(message)",
+    "groups": [
+    {
+      "name": "ConnectionStrings",
+      "displayName": "ms-resource:loc.group.displayName.sign",
+      "isExpanded": true
+    }
+  ],
   "inputs": [
     {
       "name": "ConnectedServiceName",
@@ -75,6 +84,99 @@
       "defaultValue": "",
       "required": true,
       "helpMarkDown": "The transformation file used for the deployment slot."
+    },
+    {
+      "name": "UseAppsettings",
+      "type": "boolean",
+      "label": "Enable AppSettings",
+      "defaultValue": "True",
+      "required": false,
+      "helpMarkDown": "Set this to use the appsettings section"
+    },
+    {
+      "name": "UseConnectionStrings",
+      "type": "boolean",
+      "label": "Enable Connection Strings",
+      "defaultValue": "True",
+      "required": false,
+      "groupName":"ConnectionStrings",
+      "helpMarkDown": "Set this to use the Connection String Settings"
+    },
+    {
+      "name": "SQLServerType",
+      "type": "boolean",
+      "label": "Enable SQL Server",
+      "defaultValue": "",
+      "required": false,
+      "groupName":"ConnectionStrings",
+      "helpMarkDown": "Enable if using SQL Server connection type",
+      "visibleRule": "UseConnectionStrings = true"
+    },
+    {
+      "name": "SQLServerConnectionNames",
+      "type": "string",
+      "label": "SQL Server Connection Names",
+      "defaultValue": "",
+      "required": true,
+      "helpMarkDown": "The Connection name that appears in the connection element seperated by , or ;",
+      "visibleRule": "SQLServerType = true"
+    },
+    {
+      "name": "MySqlType",
+      "type": "boolean",
+      "label": "Enable MySQL Type",
+      "defaultValue": "",
+      "required": false,
+      "groupName":"ConnectionStrings",
+      "helpMarkDown": "Enable if using the MySQL Type",
+      "visibleRule": "UseConnectionStrings = true"
+    },
+    {
+      "name": "MySQLConnectionNames",
+      "type": "string",
+      "label": "MySQL Connection Names",
+      "defaultValue": "",
+      "required": true,
+      "helpMarkDown": "The Connection name that appears in the connection element seperated by , or ;",
+      "visibleRule": "MySqlType = true"
+    },
+    {
+      "name": "AzureSQLType",
+      "type": "boolean",
+      "label": "Enable Azure SQL Type",
+      "defaultValue": "",
+      "required": false,
+      "groupName":"ConnectionStrings",
+      "helpMarkDown": "Enable if using Azure SQL Type",
+      "visibleRule": "UseConnectionStrings = true"
+    },
+    {
+      "name": "AzureSQLConnectionNames",
+      "type": "string",
+      "label": "Azure SQL Connection Names",
+      "defaultValue": "",
+      "required": true,
+      "helpMarkDown": "The Connection name that appears in the connection element seperated by , or ;",
+      "visibleRule": "AzureSQLType = true"
+    },
+    {
+      "name": "CustomType",
+      "type": "boolean",
+      "label": "Enable Custom Type",
+      "defaultValue": "",
+      "required": false,
+      "groupName":"ConnectionStrings",
+      "helpMarkDown": "Enable if using Azure SQL Type",
+      "visibleRule": "UseConnectionStrings = true"
+    },
+    {
+      "name": "CustomTypeConnectionNames",
+      "type": "string",
+      "label": "Custom Type Connection Names",
+      "defaultValue": "",
+      "required": true,
+      "helpMarkDown": "The Connection name that appears in the connection element seperated by , or ;",
+      "visibleRule": "CustomType = true"
     },
     {
       "name": "SwapSlots",

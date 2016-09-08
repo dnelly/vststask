@@ -1,6 +1,56 @@
 [CmdletBinding()]
 param()
 
+function GetAppSettings ([xml]$configFile) {
+    write-host "Starting Appsettings"
+    echo $configFile.configuration.appSettings.add
+    foreach($setting in $configFile.configuration.appSettings.add)
+    {
+        $appsettingsHash.Add($setting.key,$setting.value)
+        $appsettingsNames =$appsettingsNames + $setting.key
+    }
+
+    write-host "Finished Appsettings"
+    echo $appsettingsHash
+    
+}
+
+function GetConnectionStrings ([xml]$configFile) {
+    write-host "Starting Conectionstrings"
+    echo $configFile.configuration.connectionStrings.add
+    foreach($setting in $configFile.configuration.connectionStrings.add)
+    {        
+        if ($UseSQLServerType -eq "true") {
+            if ($SQLServerConnectionNames.split(";").split(",").contains($setting.name)) {
+                $connectionType = "SqlServer"
+            }
+        }
+        elseif ($UseAzureSQLType -eq "true") {
+            if ($AzureSQLConnectionNames.split(";").split(",").contains($setting.name)) {
+                $connectionType = "AzureSQL"
+            }            
+            
+        }
+        elseif ($UseMySqlType -eq "true") {
+            if ($MySQLConnectionNames.split(";").split(",").contains($setting.name)) {
+                $connectionType = "MySql"
+            }
+            
+        }
+        elseif ($UseCustomType -eq "true") {
+            if ($CustomTypeConnectionNames.split(";").split(",").contains($setting.name)) {
+                $connectionType = "Custom"
+            }            
+            
+        }
+
+        $connections[$setting.name] = @{Type = $connectionType;Value = $setting.connectionString}
+        $connectionNames = $connectionNames + $setting.name
+    }
+    write-host "Finished Parsing ConnectionString"
+    echo $connections
+}
+
 Write-Host "Starting Updates."
 # For more information on the VSTS Task SDK:
 # https://github.com/Microsoft/vsts-task-lib
@@ -20,6 +70,18 @@ try {
     [string]$SourceSlotName = Get-VstsInput -Name SourceSlotName
     [string]$SwapSlots = Get-VstsInput -Name SwapSlots
 
+    [string]$UseAppsettings = Get-VstsInput -Name UseAppsettings
+    [string]$UseConnectionStrings = Get-VstsInput -Name UseConnectionStrings
+    [string]$UseSQLServerType = Get-VstsInput -Name SQLServerType
+    [string]$SQLServerConnectionNames = Get-VstsInput -Name SQLServerConnectionNames
+    [string]$UseMySqlType = Get-VstsInput -Name MySqlType
+    [string]$MySQLConnectionNames = Get-VstsInput -Name MySQLConnectionNames
+    [string]$UseAzureSQLType = Get-VstsInput -Name AzureSQLType
+    [string]$AzureSQLConnectionNames = Get-VstsInput -Name AzureSQLConnectionNames
+    [string]$UseCustomType = Get-VstsInput -Name CustomType
+    [string]$CustomTypeConnectionNames = Get-VstsInput -Name CustomTypeConnectionNames
+
+
     Write-Host "Web App ame ->                  $WebAppName"
     Write-Host "Current Working directory ->    $cwd"
     Write-Host "Resource Group ->               $ResourceGroup"
@@ -27,6 +89,19 @@ try {
     Write-Host "Slot Name ->                    $Slot"
     Write-Host "Source Slot Name ->             $SourceSlotName"
     Write-Host "Swap Slots ->                   $SwapSlots"
+
+    Write-Host "Use Appsettings->                $UseAppsettings"
+    Write-Host "Use Connection Strings ->        $UseConnectionStrings"
+    Write-Host "SQL Server Type ->               $SQLServerType"
+    Write-Host "SQL Server Connection Names ->   $SQLServerConnectionNames"
+    Write-Host "My Sql Type ->                   $MySqlType"
+    Write-Host "MySQL Connection Names ->        $MySQLConnectionNames"
+    Write-Host "Azure SQL Type ->                $AzureSQLType"
+    Write-Host "Azure SQL Connection Names ->    $AzureSQLConnectionNames"
+    Write-Host "Custom Type ->                   $CustomType"
+    Write-Host "Custom Type Connection Names ->  $CustomTypeConnectionNames"
+    
+
     
     write-host "Initializing Azure"
     Import-Module $PSScriptRoot\ps_modules\VstsAzureHelpers_
@@ -45,32 +120,17 @@ try {
     $connections = @{}
     $connectionNames = @()
 
-    write-host "Starting Appsettings"
-    echo $configContent.configuration.appSettings.add
-    foreach($setting in $configContent.configuration.appSettings.add)
-    {
-        $appsettingsHash.Add($setting.key,$setting.value)
-        $appsettingsNames =$appsettingsNames + $setting.key
+    if ($UseAppsettings -eq "true") {
+        GetAppSettings $configContent
     }
 
-    write-host "Finished Appsettings"
-    echo $appsettingsHash
-
-    write-host "Starting Conectionstrings"
-    echo $configContent.configuration.connectionStrings.add
-    foreach($setting in $configContent.configuration.connectionStrings.add)
-    {
-        $connectionType = "Custom"
-        if($setting.name -eq "QueryTool")
-        {
-            $connectionType = "SqlServer"
-        }
-
-        $connections[$setting.name] = @{Type = $connectionType;Value = $setting.connectionString}
-        $connectionNames = $connectionNames + $setting.name
+    if ($UseConnectionStrings -eq "true") {
+        GetConnectionStrings $configContent
     }
-    write-host "Finished Parsing ConnectionString"
-    echo $connections
+
+    if ($UseAppsettings -eq "false" -and $UseConnectionStrings -eq "false") {
+        throw new-object System.ArgumentException
+    }
 
 
     Set-AzureRmWebAppSlotConfigName  -Name $WebAppName -ResourceGroupName $ResourceGroup -RemoveAllAppSettingNames -RemoveAllConnectionStringNames
