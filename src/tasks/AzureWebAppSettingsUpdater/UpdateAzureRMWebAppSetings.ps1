@@ -83,7 +83,7 @@ try {
 
     if ($SwapSlots -eq "true") {
         Write-Host "Beginning the Slot swap"
-        Swap-AzureRmWebAppSlot -Name $WebAppName -ResourceGroupName $ResourceGroup -SourceSlotName $SourceSlotName -DestinationSlotName $Slot -verbose -Confirm
+        Swap-AzureRmWebAppSlot -Name $WebAppName -ResourceGroupName $ResourceGroup -SourceSlotName $SourceSlotName -DestinationSlotName $Slot -verbose
     }
     else {
         Write-Host "Skipping Slot swap"
