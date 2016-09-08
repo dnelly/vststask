@@ -91,7 +91,7 @@ try {
         #     $slotsettings = Get-AzureRmWebAppSlot -Name $WebAppName -ResourceGroupName $ResourceGroup -Slot $Slot
         #     Write-Host "Slot status"
         # }
-
+        Write-Host "Finished Slot swap"
     }
     else {
         Write-Host "Skipping Slot swap"
