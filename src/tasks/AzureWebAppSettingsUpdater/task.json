@@ -118,6 +118,7 @@
       "label": "SQL Server Connection Names",
       "defaultValue": "",
       "required": true,
+      "groupName":"ConnectionStrings",
       "helpMarkDown": "The Connection name that appears in the connection element seperated by , or ;",
       "visibleRule": "SQLServerType = true"
     },
@@ -137,6 +138,7 @@
       "label": "MySQL Connection Names",
       "defaultValue": "",
       "required": true,
+      "groupName":"ConnectionStrings",
       "helpMarkDown": "The Connection name that appears in the connection element seperated by , or ;",
       "visibleRule": "MySqlType = true"
     },
@@ -156,6 +158,7 @@
       "label": "Azure SQL Connection Names",
       "defaultValue": "",
       "required": true,
+      "groupName":"ConnectionStrings",
       "helpMarkDown": "The Connection name that appears in the connection element seperated by , or ;",
       "visibleRule": "AzureSQLType = true"
     },
@@ -175,6 +178,7 @@
       "label": "Custom Type Connection Names",
       "defaultValue": "",
       "required": true,
+      "groupName":"ConnectionStrings",
       "helpMarkDown": "The Connection name that appears in the connection element seperated by , or ;",
       "visibleRule": "CustomType = true"
     },
