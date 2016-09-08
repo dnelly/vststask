@@ -14,7 +14,7 @@
   "version": {
     "Major": "0",
     "Minor": "3",
-    "Patch": "8"
+    "Patch": "9"
   },
   "minimumAgentVersion": "1.102.0",
   "instanceNameFormat": "AzureWebAppSettingsUpdater $(message)",
