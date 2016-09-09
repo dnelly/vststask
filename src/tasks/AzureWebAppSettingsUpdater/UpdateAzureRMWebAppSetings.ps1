@@ -1,21 +1,43 @@
 [CmdletBinding()]
 param()
 
+
+Write-Host "Starting Updates."
+# For more information on the VSTS Task SDK:
+# https://github.com/Microsoft/vsts-task-lib
+Trace-VstsEnteringInvocation $MyInvocation
+
 function GetAppSettings ([xml]$configFile) {
+    $tempappsettings = @{}
     write-host "Starting Appsettings"
     echo $configFile.configuration.appSettings.add
     foreach($setting in $configFile.configuration.appSettings.add)
     {
-        $appsettingsHash.Add($setting.key,$setting.value)
-        $appsettingsNames =$appsettingsNames + $setting.key
+        $tempappsettings.Add($setting.key,$setting.value)
     }
 
     write-host "Finished Appsettings"
-    echo $appsettingsHash
+
+    return [hashtable]$tempappsettings
+}
+
+function GetAppSettingNames ([xml]$configFile) {
+    $tempappsettingsNames = @()
+
+    write-host "Getting Appsettings Names"
+    echo $configFile.configuration.appSettings.add
+    foreach($setting in $configFile.configuration.appSettings.add)
+    {
+        $tempappsettingsNames =$tempappsettingsNames + $setting.key
+    }
+
+    write-host "Finished Getting Appsettings Names"
     
+    return $tempappsettingsNames
 }
 
 function GetConnectionStrings ([xml]$configFile) {
+    $tempconnections = @{}
     write-host "Starting Conectionstrings"
     echo $configFile.configuration.connectionStrings.add
     foreach($setting in $configFile.configuration.connectionStrings.add)
@@ -44,17 +66,53 @@ function GetConnectionStrings ([xml]$configFile) {
             
         }
 
-        $connections[$setting.name] = @{Type = $connectionType;Value = $setting.connectionString}
-        $connectionNames = $connectionNames + $setting.name
+        $tempconnections[$setting.name] = @{Type = $connectionType;Value = $setting.connectionString}
     }
     write-host "Finished Parsing ConnectionString"
-    echo $connections
+    return [hashtable]$tempconnections
 }
 
-Write-Host "Starting Updates."
-# For more information on the VSTS Task SDK:
-# https://github.com/Microsoft/vsts-task-lib
-Trace-VstsEnteringInvocation $MyInvocation
+function GetConnectionStringNames ([xml]$configFile) {
+    $tempconnectionNames = @()
+    write-host "Getting Conectionstrings Names"
+    echo $configFile.configuration.connectionStrings.add
+    foreach($setting in $configFile.configuration.connectionStrings.add)
+    {        
+        $tempconnectionNames = $tempconnectionNames + $setting.name
+    }
+    write-host "Finished Getting ConnectionString Names"
+    return $tempconnectionNames
+}
+
+function GetConnectionType ([string]$settingName) {
+            if ($UseSQLServerType -eq "true") {
+            if ($SQLServerConnectionNames.split(";").split(",").contains($settingName)) {
+                $connectionType = "SqlServer"
+            }
+        }
+        elseif ($UseAzureSQLType -eq "true") {
+            if ($AzureSQLConnectionNames.split(";").split(",").contains($settingName)) {
+                $connectionType = "AzureSQL"
+            }            
+            
+        }
+        elseif ($UseMySqlType -eq "true") {
+            if ($MySQLConnectionNames.split(";").split(",").contains($settingName)) {
+                $connectionType = "MySql"
+            }
+            
+        }
+        elseif ($UseCustomType -eq "true") {
+            if ($CustomTypeConnectionNames.split(";").split(",").contains($settingName)) {
+                $connectionType = "Custom"
+            }            
+            
+        }
+
+        $connectionType
+}
+
+
 try {
     # Set the working directory.
     $cwd = Get-VstsInput -Name cwd -Require
@@ -120,17 +178,52 @@ try {
     $connections = @{}
     $connectionNames = @()
 
-    if ($UseAppsettings -eq "true") {
-        GetAppSettings $configContent
+    # if ($UseAppsettings -eq "true") {
+    #     $appsettingsHash = [hashtable](GetAppSettings $configContent)
+    #     echo $appsettingsHash
+    #     $appsettingsNames = [hashtable](GetAppSettingNames $configContent)
+    #     echo $appsettingsNames
+    # }
+
+
+
+    # if ($UseConnectionStrings -eq "true") {
+    #     $connections = GetConnectionStrings $configContent
+    #     echo $connections
+    #     $connectionNames = GetConnectionStringNames $configContent
+    #     echo $connectionNames
+
+    # }
+    
+
+    
+    # if ($UseAppsettings -eq "false" -and $UseConnectionStrings -eq "false") {
+    #     throw new-object System.ArgumentException
+    # }
+
+    write-host "Starting Appsettings"
+    echo $configContent.configuration.appSettings.add
+    foreach($setting in $configContent.configuration.appSettings.add)
+    {
+        $appsettingsHash.Add($setting.key,$setting.value)
+        $appsettingsNames =$appsettingsNames + $setting.key
     }
 
-    if ($UseConnectionStrings -eq "true") {
-        GetConnectionStrings $configContent
-    }
+    write-host "Finished Appsettings"
+    echo $appsettingsHash
+    
+    write-host "*****************************"
 
-    if ($UseAppsettings -eq "false" -and $UseConnectionStrings -eq "false") {
-        throw new-object System.ArgumentException
+    write-host "Starting Conectionstrings"
+    echo $configContent.configuration.connectionStrings.add
+    foreach($setting in $configContent.configuration.connectionStrings.add)
+    {
+        $connectionType = GetConnectionType $setting.name
+        $connections[$setting.name] = @{Type = $connectionType;Value = $setting.connectionString}
+        $connectionNames = $connectionNames + $setting.name
     }
+    write-host "Finished Parsing ConnectionString"
+    echo $connections
 
 
     Set-AzureRmWebAppSlotConfigName  -Name $WebAppName -ResourceGroupName $ResourceGroup -RemoveAllAppSettingNames -RemoveAllConnectionStringNames

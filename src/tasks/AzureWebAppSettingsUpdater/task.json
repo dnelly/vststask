@@ -16,14 +16,14 @@
   "version": {
     "Major": "1",
     "Minor": "0",
-    "Patch": "0"
+    "Patch": "7"
   },
   "minimumAgentVersion": "1.102.0",
   "instanceNameFormat": "AzureWebAppSettingsUpdater $(message)",
     "groups": [
     {
       "name": "ConnectionStrings",
-      "displayName": "ms-resource:loc.group.displayName.sign",
+      "displayName": "Connection Strings Settings",
       "isExpanded": true
     }
   ],
