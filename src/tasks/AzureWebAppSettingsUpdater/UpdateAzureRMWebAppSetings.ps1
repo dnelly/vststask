@@ -7,111 +7,6 @@ Write-Host "Starting Updates."
 # https://github.com/Microsoft/vsts-task-lib
 Trace-VstsEnteringInvocation $MyInvocation
 
-# function GetAppSettings ([xml]$configFile) {
-#     $tempappsettings = @{}
-#     write-host "Starting Appsettings"
-#     echo $configFile.configuration.appSettings.add
-#     foreach($setting in $configFile.configuration.appSettings.add)
-#     {
-#         $tempappsettings.Add($setting.key,$setting.value)
-#     }
-
-#     write-host "Finished Appsettings"
-
-#     return [hashtable]$tempappsettings
-# }
-
-# function GetAppSettingNames ([xml]$configFile) {
-#     $tempappsettingsNames = @()
-
-#     write-host "Getting Appsettings Names"
-#     echo $configFile.configuration.appSettings.add
-#     foreach($setting in $configFile.configuration.appSettings.add)
-#     {
-#         $tempappsettingsNames =$tempappsettingsNames + $setting.key
-#     }
-
-#     write-host "Finished Getting Appsettings Names"
-    
-#     return $tempappsettingsNames
-# }
-
-# function GetConnectionStrings ([xml]$configFile) {
-#     $tempconnections = @{}
-#     write-host "Starting Conectionstrings"
-#     echo $configFile.configuration.connectionStrings.add
-#     foreach($setting in $configFile.configuration.connectionStrings.add)
-#     {        
-#         if ($UseSQLServerType -eq "true") {
-#             if ($SQLServerConnectionNames.split(";").split(",").contains($setting.name)) {
-#                 $connectionType = "SqlServer"
-#             }
-#         }
-#         elseif ($UseAzureSQLType -eq "true") {
-#             if ($AzureSQLConnectionNames.split(";").split(",").contains($setting.name)) {
-#                 $connectionType = "AzureSQL"
-#             }            
-            
-#         }
-#         elseif ($UseMySqlType -eq "true") {
-#             if ($MySQLConnectionNames.split(";").split(",").contains($setting.name)) {
-#                 $connectionType = "MySql"
-#             }
-            
-#         }
-#         elseif ($UseCustomType -eq "true") {
-#             if ($CustomTypeConnectionNames.split(";").split(",").contains($setting.name)) {
-#                 $connectionType = "Custom"
-#             }            
-            
-#         }
-
-#         $tempconnections[$setting.name] = @{Type = $connectionType;Value = $setting.connectionString}
-#     }
-#     write-host "Finished Parsing ConnectionString"
-#     return [hashtable]$tempconnections
-# }
-
-# function GetConnectionStringNames ([xml]$configFile) {
-#     $tempconnectionNames = @()
-#     write-host "Getting Conectionstrings Names"
-#     echo $configFile.configuration.connectionStrings.add
-#     foreach($setting in $configFile.configuration.connectionStrings.add)
-#     {        
-#         $tempconnectionNames = $tempconnectionNames + $setting.name
-#     }
-#     write-host "Finished Getting ConnectionString Names"
-#     return $tempconnectionNames
-# }
-
-# function GetConnectionType ([string]$settingName) {
-#             if ($UseSQLServerType -eq "true") {
-#             if ($SQLServerConnectionNames.split(";").split(",").contains($settingName)) {
-#                 $connectionType = "SqlServer"
-#             }
-#         }
-#         elseif ($UseAzureSQLType -eq "true") {
-#             if ($AzureSQLConnectionNames.split(";").split(",").contains($settingName)) {
-#                 $connectionType = "AzureSQL"
-#             }            
-            
-#         }
-#         elseif ($UseMySqlType -eq "true") {
-#             if ($MySQLConnectionNames.split(";").split(",").contains($settingName)) {
-#                 $connectionType = "MySql"
-#             }
-            
-#         }
-#         elseif ($UseCustomType -eq "true") {
-#             if ($CustomTypeConnectionNames.split(";").split(",").contains($settingName)) {
-#                 $connectionType = "Custom"
-#             }            
-            
-#         }
-
-#         $connectionType
-# }
-
 
 try {
     # Set the working directory.
@@ -138,34 +33,6 @@ try {
     [string]$AzureSQLConnectionNames = Get-VstsInput -Name AzureSQLConnectionNames
     [string]$UseCustomType = Get-VstsInput -Name CustomType
     [string]$CustomTypeConnectionNames = Get-VstsInput -Name CustomTypeConnectionNames
-
-    function GetConnectionType ([string]$settingName) {
-                if ($UseSQLServerType -eq "true") {
-                if ($SQLServerConnectionNames.split(";").split(",").contains($settingName)) {
-                    $connectionType = "SqlServer"
-                }
-            }
-            elseif ($UseAzureSQLType -eq "true") {
-                if ($AzureSQLConnectionNames.split(";").split(",").contains($settingName)) {
-                    $connectionType = "AzureSQL"
-                }            
-                
-            }
-            elseif ($UseMySqlType -eq "true") {
-                if ($MySQLConnectionNames.split(";").split(",").contains($settingName)) {
-                    $connectionType = "MySql"
-                }
-                
-            }
-            elseif ($UseCustomType -eq "true") {
-                if ($CustomTypeConnectionNames.split(";").split(",").contains($settingName)) {
-                    $connectionType = "Custom"
-                }            
-                
-            }
-
-            $connectionType
-    }
 
     Write-Host "Web App ame ->                  $WebAppName"
     Write-Host "Current Working directory ->    $cwd"
@@ -205,29 +72,6 @@ try {
     $connections = @{}
     $connectionNames = @()
 
-    # if ($UseAppsettings -eq "true") {
-    #     $appsettingsHash = [hashtable](GetAppSettings $configContent)
-    #     echo $appsettingsHash
-    #     $appsettingsNames = [hashtable](GetAppSettingNames $configContent)
-    #     echo $appsettingsNames
-    # }
-
-
-
-    # if ($UseConnectionStrings -eq "true") {
-    #     $connections = GetConnectionStrings $configContent
-    #     echo $connections
-    #     $connectionNames = GetConnectionStringNames $configContent
-    #     echo $connectionNames
-
-    # }
-    
-
-    
-    # if ($UseAppsettings -eq "false" -and $UseConnectionStrings -eq "false") {
-    #     throw new-object System.ArgumentException
-    # }
-
     if ($UseAppsettings -eq "True") {
 
         write-host "Starting Appsettings"
@@ -254,7 +98,31 @@ try {
         echo $configContent.configuration.connectionStrings.add
         foreach($setting in $configContent.configuration.connectionStrings.add)
         {
-            $connectionType = GetConnectionType $setting.name
+            $connectionType = "Custom"
+
+            if ($UseSQLServerType -eq "true") {
+                if ($SQLServerConnectionNames.split(";").split(",").contains($setting.Name)) {
+                    $connectionType = "SqlServer"
+                }
+            }
+            elseif ($UseAzureSQLType -eq "true") {
+                if ($AzureSQLConnectionNames.split(";").split(",").contains($setting.Name)) {
+                    $connectionType = "AzureSQL"
+                }            
+                
+            }
+            elseif ($UseMySqlType -eq "true") {
+                if ($MySQLConnectionNames.split(";").split(",").contains($setting.Name)) {
+                    $connectionType = "MySql"
+                }
+                
+            }
+            elseif ($UseCustomType -eq "true") {
+                if ($CustomTypeConnectionNames.split(";").split(",").contains($setting.Name)) {
+                    $connectionType = "Custom"
+                }            
+                
+            }            
             $connections[$setting.name] = @{Type = $connectionType;Value = $setting.connectionString}
             $connectionNames = $connectionNames + $setting.name
         }
