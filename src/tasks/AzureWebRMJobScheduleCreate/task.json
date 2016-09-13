@@ -16,7 +16,7 @@
   "version": {
     "Major": "0",
     "Minor": "1",
-    "Patch": "5"
+    "Patch": "7"
   },
   "minimumAgentVersion": "1.95.0",
   "instanceNameFormat": "AzureRM Web Job Schedule Create $(message)",
@@ -66,6 +66,13 @@
       "name":"WebJobSettingsFile",
       "type":"filePath",
       "label":"Web Job Settings File",
+      "required":true,
+      "helpMarkDown":"Select the file to use for the schedule"
+    },
+    {
+      "name":"jobCollectionName",
+      "type":"string",
+      "label":"Azure RM Schedule Collection",
       "required":true,
       "helpMarkDown":"Select the file to use for the schedule"
     }

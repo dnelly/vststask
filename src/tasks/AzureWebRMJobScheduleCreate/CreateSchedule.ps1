@@ -37,7 +37,7 @@ try {
     $deploymentSettings = [xml](Get-AzureRmWebAppPublishingProfile -Name $uriFormat -OutputFile $outputFile -ResourceGroupName $ResourceGroup -Format WebDeploy)
     $webdeploySettings = $deploymentSettings.publishData.publishProfile | Where-Object {$_.publishMethod -eq "MSDeploy"}
 
-    $jobSettings =  (get-content $WebJobSettingsFile) | Convertfrom-Json
+    $jobSettings =  (get-content $WebJobSettingsFile -Raw) | Convertfrom-Json 
     $jobSettings
     $jobUri = "https://{0}/api/triggeredwebjobs/{1}/run" -f $webdeploySettings.publishUrl.Split(":")[0],$jobSettings.webJobName
     Write-Host "Getting Azure RM Scheduler Job Collection"
