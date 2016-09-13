@@ -12,13 +12,21 @@
   ],
   "demands": [],
   "version": {
-    "Major": "0",
-    "Minor": "7",
-    "Patch": "24"
+    "Major": "1",
+    "Minor": "0",
+    "Patch": "4"
   },
   "minimumAgentVersion": "1.95.0",
   "instanceNameFormat": "WebJobsTools $(message)",
   "inputs": [
+    {
+      "name": "ConnectedServiceName",
+      "type": "connectedService:AzureRM",
+      "label": "AzureRM Subscription",
+      "defaultValue": "",
+      "required": true,
+      "helpMarkDown": "Select the Azure Resource Manager subscription for the deployment."
+    },
     {
       "name": "JobName",
       "type": "string",
@@ -26,13 +34,41 @@
       "required": true,
       "helpMarkDown": "The name of the job that needs to be stopped or started"
     },
-    {
-      "name": "AzureWebAppName",
-      "type": "string",
-      "label": "Azure Web App Name",
+        {
+      "name": "WebAppName",
+      "type": "pickList",
+      "label": "Web App Name",
+      "defaultValue": "",
       "required": true,
-      "helpMarkDown": "The Azure Web App that the job belongs to"
+      "properties": {
+        "EditableOptions": "True"
+      },
+      "helpMarkDown": "Enter or Select the name of an existing AzureRM Web Application."
+    }
+    ,
+    {
+      "name": "ResourceGroupName",
+      "type": "pickList",
+      "label": "Resource Group",
+      "defaultValue": "",
+      "required": true,
+      "properties": {
+        "EditableOptions": "True"
+      },
+      "helpMarkDown": "Enter or Select the Azure Resource Group that contains the AzureRM Web App specified above."
     },
+    {
+      "name": "SlotName",
+      "type": "pickList",
+      "label": "Slot",
+      "defaultValue": "",
+      "required": true,
+      "properties": {
+        "EditableOptions": "True"
+      },
+      "helpMarkDown": "Enter or Select an existing Slot.  This will also be used as the destination slot for swap"
+    }
+    ,
     {
       "name": "JobState",
       "type": "pickList",
@@ -56,21 +92,33 @@
         "triggered": "Triggered",
         "continuous": "Continuous"
       }
-    },
-    {
-      "name": "UserName",
-      "type": "string",
-      "label": "User Name",
-      "required": true,
-      "helpMarkDown": "The username to use for authentication.  This has to be the publish profile for the web app."
-    },
-    {
-      "name": "Password",
-      "type": "string",
-      "label": "Password",
-      "required": true,
-      "helpMarkDown": "The password from the publish profile.  You can use variables such as $(password) etc."
     }
+  ],
+    "dataSourceBindings":[
+    {
+      "target": "WebAppName",
+      "endpointId": "$(ConnectedServiceName)",
+      "dataSourceName": "AzureRMWebAppNames"
+    },
+    {
+      "target": "ResourceGroupName",
+      "endpointId": "$(ConnectedServiceName)",
+      "dataSourceName": "AzureRMWebAppResourceGroup",
+      "parameters": {
+        "WebAppName": "$(WebAppName)"
+      }
+    },
+    {
+      "target": "SlotName",
+      "endpointId": "$(ConnectedServiceName)",
+      "dataSourceName": "AzureRMWebAppSlotsId",
+      "parameters": {
+        "WebAppName": "$(WebAppName)",
+        "ResourceGroupName": "$(ResourceGroupName)"
+      },
+      "resultTemplate": "{\"Value\":\"{{{ #extractResource slots}}}\",\"DisplayValue\":\"{{{ #extractResource slots}}}\"}"
+    }
+
   ],
   "execution": {
     "PowerShell3": {

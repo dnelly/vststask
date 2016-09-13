@@ -53,7 +53,7 @@ try {
     }
     finally {
         Write-Host "Create new Schedule"
-        new-AzureRmSchedulerHttpJob -JobCollectionName $jobCollection.JobCollectionName -JobName $jobSettings.webJobName -Method POST -ResourceGroupName $ResourceGroup -Uri $jobUri -HttpAuthenticationType Basic -Username $webdeploySettings.userName  -Password $webdeploySettings.userPWD
+        new-AzureRmSchedulerHttpJob -JobCollectionName $jobCollection.JobCollectionName -JobName $jobSettings.webJobName -Method POST -ResourceGroupName $ResourceGroup -Uri $jobUri -HttpAuthenticationType Basic -Username $webdeploySettings.userName  -Password $webdeploySettings.userPWD -Frequency $jobSettings.jobRecurrenceFrequency -StartTime $jobSettings.startTime -EndTime $jobSettings.endTime -Interval $jobSettings.interval
     
     }
 

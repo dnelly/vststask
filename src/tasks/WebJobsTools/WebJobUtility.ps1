@@ -14,17 +14,42 @@ try {
     # Write-Host (Get-VstsInput -Name msg)
 
     [string]$JobName = Get-VstsInput -Name JobName -Require
-    [string]$AzureWebAppName = Get-VstsInput -Name AzureWebAppName -Require
-    # [bool]$StopJob = Get-VstsInput -Name StopJob
+    [string]$AzureWebAppName = Get-VstsInput -Name WebAppName -Require
+    [string]$ResourceGroupName = Get-VstsInput -Name ResourceGroupName
+    [string]$Slot = Get-VstsInput -Name SlotName
     [string]$JobState = Get-VstsInput -Name JobState
     [string]$JobType = Get-VstsInput -Name JobType -Require
-    [string]$UserName = Get-VstsInput -Name UserName -Require
-    [string]$Password = Get-VstsInput -Name Password -Require
+
+
+    Import-Module $PSScriptRoot\ps_modules\VstsAzureHelpers_
+    Initialize-Azure
+
+    $outputFile = [System.IO.Path]::Combine($env:Agent_WorkingDirectory,"tempProfile.xml")
+    $uriFormat = ""
+    if(($slot -eq "production") -or ([string]::IsNullOrEmpty($Slot))){
+        $uriFormat = "{0}" -f $AzureWebAppName
+    }
+    else {
+        $uriFormat = "{0}/slots/{1}" -f $AzureWebAppName, $Slot
+    }
+    
+    Write-Host "Getting Azure Web App Deployment Settings"
+    $deploymentSettings = [xml](Get-AzureRmWebAppPublishingProfile -Name $uriFormat -OutputFile $outputFile -ResourceGroupName $ResourceGroup -Format WebDeploy)
+    $webdeploySettings = $deploymentSettings.publishData.publishProfile | Where-Object {$_.publishMethod -eq "MSDeploy"}
+
+    $jobSettings =  (get-content $WebJobSettingsFile) | Convertfrom-Json
+    $jobSettings
+    $jobUri = "https://{0}/api/{1}webjobs/{2}/{3}"
+
+
+
+    [string]$UserName = $webdeploySettings.userName
+    [string]$Password = $webdeploySettings.userPWD
     $token =  [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes("$($UserName):$($Password)"));
     $headers = New-Object "System.Collections.Generic.Dictionary[[String],[String]]"
     $headers.Add("Authorization", [string]::Format('Basic {0}',$token))
-    $requestUribase = 'https://{0}.scm.azurewebsites.net/api/{1}webjobs/{2}/{3}'
-
+    
+    $requestUribase = 'https://{0}/api/{1}webjobs/{2}/{3}'
     Write-Host "[JobName] ->            $JobName"
     Write-Host "[AzureWebAppName] ->    $AzureWebAppName"
     Write-Host "[JobState] ->           $JobState"
@@ -32,11 +57,9 @@ try {
     Write-Host "[UserName] ->           $UserName"
 
 
-
-
     Write-Host "$JobState Job $JobName"
-    $postRequest = [string]::Format($requestUribase, $AzureWebAppName, $JobType, $JobName,$JobState.ToLower())
-    $getRequest = [string]::Format($requestUribase, $AzureWebAppName, $JobType, $JobName,"")
+    $postRequest = [string]::Format($requestUribase, $webdeploySettings.publishUrl.Split(":")[0], $JobType, $JobName,$JobState.ToLower())
+    $getRequest = [string]::Format($requestUribase, $webdeploySettings.publishUrl.Split(":")[0], $JobType, $JobName,"")
 
     Write-Host "Checking the current status of the job"
     $response = Invoke-RestMethod $getrequest.Trim() -Headers $headers -ContentType 'application/json' -Method Get
