@@ -15,7 +15,7 @@ try {
 
     [string]$JobName = Get-VstsInput -Name JobName -Require
     [string]$AzureWebAppName = Get-VstsInput -Name WebAppName -Require
-    [string]$ResourceGroupName = Get-VstsInput -Name ResourceGroupName
+    [string]$ResourceGroupName = Get-VstsInput -Name ResourceGroupName -Require
     [string]$Slot = Get-VstsInput -Name SlotName
     [string]$JobState = Get-VstsInput -Name JobState
     [string]$JobType = Get-VstsInput -Name JobType -Require
@@ -34,13 +34,9 @@ try {
     }
     
     Write-Host "Getting Azure Web App Deployment Settings"
-    $deploymentSettings = [xml](Get-AzureRmWebAppPublishingProfile -Name $uriFormat -OutputFile $outputFile -ResourceGroupName $ResourceGroup -Format WebDeploy)
+    [string]$ResourceGroupName = Get-VstsInput -Name ResourceGroupName -Require
+    $deploymentSettings = [xml](Get-AzureRmWebAppPublishingProfile -Name $uriFormat -OutputFile $outputFile -ResourceGroupName $ResourceGroupName -Format WebDeploy)
     $webdeploySettings = $deploymentSettings.publishData.publishProfile | Where-Object {$_.publishMethod -eq "MSDeploy"}
-
-    $jobSettings =  (get-content $WebJobSettingsFile) | Convertfrom-Json
-    $jobSettings
-    $jobUri = "https://{0}/api/{1}webjobs/{2}/{3}"
-
 
 
     [string]$UserName = $webdeploySettings.userName
