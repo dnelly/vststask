@@ -1,0 +1,101 @@
+{
+  "id": "8f435dd0-7920-11e6-b132-c78a064433fd",
+  "name": "AzureWebRMJobScheduleCreate",
+  "friendlyName": "AzureRM Web Job Schedule Creator",
+  "description": "Creates an AzureRM Job Schedule in a Job Schedule Collection",
+  "author": "Darnell McMurrian",
+  "helpMarkDown": "Replace with markdown to show in help",
+  "category": "Deploy",
+  "visibility": [
+    "Build",
+    "Release"
+  ],
+  "demands": [],
+  "version": {
+    "Major": "0",
+    "Minor": "1",
+    "Patch": "0"
+  },
+  "minimumAgentVersion": "1.95.0",
+  "instanceNameFormat": "AzureWebRMJobScheduleCreate $(message)",
+  "inputs": [
+    {
+      "name": "ConnectedServiceName",
+      "type": "connectedService:AzureRM",
+      "label": "AzureRM Subscription",
+      "defaultValue": "",
+      "required": true,
+      "helpMarkDown": "Select the Azure Resource Manager subscription for the deployment."
+    },
+    {
+      "name": "WebAppName",
+      "type": "pickList",
+      "label": "Web App Name",
+      "defaultValue": "",
+      "required": true,
+      "properties": {
+        "EditableOptions": "True"
+      },
+      "helpMarkDown": "Enter or Select the name of an existing AzureRM Web Application."
+    },
+    {
+      "name": "ResourceGroupName",
+      "type": "pickList",
+      "label": "Resource Group",
+      "defaultValue": "",
+      "required": true,
+      "properties": {
+        "EditableOptions": "True"
+      },
+      "helpMarkDown": "Enter or Select the Azure Resource Group that contains the AzureRM Web App specified above."
+    },
+    {
+      "name": "SlotName",
+      "type": "pickList",
+      "label": "Slot",
+      "defaultValue": "",
+      "required": true,
+      "properties": {
+        "EditableOptions": "True"
+      },
+      "helpMarkDown": "Enter or Select an existing Slot.  This will also be used as the destination slot for swap"
+    },
+    {
+      "name":"WebJobSettingsFile",
+      "type":"FilePath",
+      "label":"Web Job Settings File",
+      "required":true,
+      "helpMarkDown":"Select the file to use for the schedule"
+    }
+  ],
+  "datasources":[
+    {
+      "target": "WebAppName",
+      "endpointId": "$(ConnectedServiceName)",
+      "dataSourceName": "AzureRMWebAppNames"
+    },
+    {
+      "target": "ResourceGroupName",
+      "endpointId": "$(ConnectedServiceName)",
+      "dataSourceName": "AzureRMWebAppResourceGroup",
+      "parameters": {
+        "WebAppName": "$(WebAppName)"
+      }
+    },
+    {
+      "target": "SlotName",
+      "endpointId": "$(ConnectedServiceName)",
+      "dataSourceName": "AzureRMWebAppSlotsId",
+      "parameters": {
+        "WebAppName": "$(WebAppName)",
+        "ResourceGroupName": "$(ResourceGroupName)"
+      },
+      "resultTemplate": "{\"Value\":\"{{{ #extractResource slots}}}\",\"DisplayValue\":\"{{{ #extractResource slots}}}\"}"
+    }
+  ],
+  "execution": {
+    "PowerShell3": {
+      "target": "CreateSchedule.ps1"
+    }
+  }
+}
