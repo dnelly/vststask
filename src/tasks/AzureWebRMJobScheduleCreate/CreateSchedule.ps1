@@ -37,7 +37,7 @@ try {
     $deploymentSettings = [xml](Get-AzureRmWebAppPublishingProfile -Name $uriFormat -OutputFile $outputFile -ResourceGroupName $ResourceGroup -Format WebDeploy)
     $webdeploySettings = $deploymentSettings.publishData.publishProfile | Where-Object {$_.publishMethod -eq "MSDeploy"}
 
-    $jobSettings =  (get-content $WebJobSettingsFile -Raw) | Convertfrom-Json 
+    $jobSettings =  (get-content $WebJobSettingsFile -Raw)| out-string | Convertfrom-Json 
     $jobSettings
     $jobUri = "https://{0}/api/triggeredwebjobs/{1}/run" -f $webdeploySettings.publishUrl.Split(":")[0],$jobSettings.webJobName
     Write-Host "Getting Azure RM Scheduler Job Collection"
@@ -46,16 +46,27 @@ try {
 
     
     #Set-AzureRmSchedulerHttpJob -JobCollectionName $jobCollection.JobCollectionName -JobName $jobSettings.webJobName -Method POST -ResourceGroupName $resourceGroup -Uri $jobUri -HttpAuthenticationType Basic -Username $webdeploySettings.userName  -Password $webdeploySettings.userPWD
-    
-    try {
-        Write-Host "Removing old Schedule"
-        Remove-AzureRmSchedulerJob -JobCollectionName $jobCollection.JobCollectionName -JobName $jobSettings.webJobName -ResourceGroupName $resourceGroup
-    }
-    finally {
+        write-host "Checking to see if the job exist."
+        $jobCollectionJobs = (Get-AzureRmSchedulerJob -JobCollectionName $jobCollectionName -ResourceGroupName $ResourceGroup)       
+        $currentJobNames = $jobCollectionJobs | Select -ExpandProperty JobName
+        if ($currentJobNames -Contains $jobSettings.webJobName) {
+            Write-Host "Found job in collection"
+            Write-Host "Removing old job schedule"
+            Remove-AzureRmSchedulerJob -JobCollectionName $jobCollection.JobCollectionName -JobName $jobSettings.webJobName -ResourceGroupName $ResourceGroup                
+        }
+        else {
+            Write-Host "Job was not found"
+        }    
+
         Write-Host "Create new Schedule"
-        new-AzureRmSchedulerHttpJob -JobCollectionName $jobCollection.JobCollectionName -JobName $jobSettings.webJobName -Method POST -ResourceGroupName $ResourceGroup -Uri $jobUri -HttpAuthenticationType Basic -Username $webdeploySettings.userName  -Password $webdeploySettings.userPWD -Frequency $jobSettings.jobRecurrenceFrequency -StartTime $jobSettings.startTime -EndTime $jobSettings.endTime -Interval $jobSettings.interval
+        if ($jobSettings.Endtime -ne $null) {
+            new-AzureRmSchedulerHttpJob -JobCollectionName $jobCollection.JobCollectionName -JobName $jobSettings.webJobName -Method POST -ResourceGroupName $ResourceGroup -Uri $jobUri -HttpAuthenticationType Basic -Username $webdeploySettings.userName  -Password $webdeploySettings.userPWD -Frequency $jobSettings.jobRecurrenceFrequency -StartTime $jobSettings.startTime -EndTime $jobSettings.endTime -Interval $jobSettings.interval
     
-    }
+        }
+        else {
+            new-AzureRmSchedulerHttpJob -JobCollectionName $jobCollection.JobCollectionName -JobName $jobSettings.webJobName -Method POST -ResourceGroupName $ResourceGroup -Uri $jobUri -HttpAuthenticationType Basic -Username $webdeploySettings.userName  -Password $webdeploySettings.userPWD -Frequency $jobSettings.jobRecurrenceFrequency -StartTime $jobSettings.startTime -Interval $jobSettings.interval
+            
+        }
 
 
 } finally {
