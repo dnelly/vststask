@@ -57,28 +57,41 @@ try {
     $postRequest = [string]::Format($requestUribase, $webdeploySettings.publishUrl.Split(":")[0], $JobType, $JobName,$JobState.ToLower())
     $getRequest = [string]::Format($requestUribase, $webdeploySettings.publishUrl.Split(":")[0], $JobType, $JobName,"")
 
-    Write-Host "Checking the current status of the job"
-    $response = Invoke-RestMethod $getrequest.Trim() -Headers $headers -ContentType 'application/json' -Method Get
-    $status = $response.status
-    if ($status -eq $JobState) {
-        Write-host "The Job is currently $JobState."
-        exit 0
-    }
-
-    Write-host "Processing current request for URI"
-    Write-Host $postRequest
-    $response = Invoke-RestMethod $postRequest -Headers $headers -ContentType 'application/json' -Method Post
-    start-sleep -Seconds 5
-    Write-Host "Getting the status of $Jobname"
-    $response =  Invoke-RestMethod $getrequest.Trim() -Headers $headers -ContentType 'application/json' -Method Get
-    $status = $response.status
-    while (($status -ne "Running") -and ($status -ne "Stopped")) {
+    $jobsRequest = "https://{0}/api/webjobs" -f $webdeploySettings.publishUrl.Split(":")[0]
+    $websitejobs = (Invoke-RestMethod $jobsRequest.Trim() -Headers $headers -ContentType 'application/json' -Method Get)
+    $currentJobNames = $websitejobs | Select -ExpandProperty Name
+    if ($currentJobNames -Contains $JobName) {
+        Write-Host "Checking the current status of the job"
+        $response = Invoke-RestMethod $getrequest.Trim() -Headers $headers -ContentType 'application/json' -Method Get
         $status = $response.status
-        write-host "Current Status $status"
+        if ($status -eq $JobState) {
+            Write-host "The Job is currently $JobState."
+            exit 0
+        }
+
+        Write-host "Processing current request for URI"
+        Write-Host $postRequest
+        $response = Invoke-RestMethod $postRequest -Headers $headers -ContentType 'application/json' -Method Post
+        start-sleep -Seconds 5
+        Write-Host "Getting the status of $Jobname"
         $response =  Invoke-RestMethod $getrequest.Trim() -Headers $headers -ContentType 'application/json' -Method Get
+        $status = $response.status
+        while (($status -ne "Running") -and ($status -ne "Stopped")) {
+            $status = $response.status
+            write-host "Current Status $status"
+            $response =  Invoke-RestMethod $getrequest.Trim() -Headers $headers -ContentType 'application/json' -Method Get
+        }
+
+        Invoke-RestMethod $getrequest.Trim() -Headers $headers -ContentType 'application/json' -Method Get
+
+
+        
+    }
+    else{
+        Write-Host "Job $Jobname doesn't exist"
     }
 
-    Invoke-RestMethod $getrequest.Trim() -Headers $headers -ContentType 'application/json' -Method Get
+
 
 } finally {
     Trace-VstsLeavingInvocation $MyInvocation
