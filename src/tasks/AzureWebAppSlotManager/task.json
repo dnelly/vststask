@@ -14,9 +14,9 @@
     "AzurePS -equals 2.0.1"
   ],
   "version": {
-    "Major": "1",
+    "Major": "2",
     "Minor": "0",
-    "Patch": "11"
+    "Patch": "114"
   },
   "minimumAgentVersion": "1.102.0",
   "instanceNameFormat": "AzureWebAppSettingsUpdater $(message)",
@@ -114,7 +114,7 @@
     },
     {
       "name": "SQLServerConnectionNames",
-      "type": "string",
+      "type": "multiLine",
       "label": "SQL Server Connection Names",
       "defaultValue": "",
       "required": true,
@@ -134,7 +134,7 @@
     },
     {
       "name": "MySQLConnectionNames",
-      "type": "string",
+      "type": "multiLine",
       "label": "MySQL Connection Names",
       "defaultValue": "",
       "required": true,
@@ -154,7 +154,7 @@
     },
     {
       "name": "AzureSQLConnectionNames",
-      "type": "string",
+      "type": "multiLine",
       "label": "Azure SQL Connection Names",
       "defaultValue": "",
       "required": true,
@@ -174,7 +174,7 @@
     },
     {
       "name": "CustomTypeConnectionNames",
-      "type": "string",
+      "type": "multiLine",
       "label": "Custom Type Connection Names",
       "defaultValue": "",
       "required": true,

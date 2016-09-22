@@ -134,10 +134,11 @@ try {
         throw new-object System.ArgumentException
     }
 
-    Set-AzureRmWebAppSlotConfigName  -Name $WebAppName -ResourceGroupName $ResourceGroup -RemoveAllAppSettingNames -RemoveAllConnectionStringNames
-
+    
+    #Add the currect settings.
     $results = Set-AzureRmWebAppSlot -Name $WebAppName -ResourceGroupName $ResourceGroup -Slot $Slot -AppSettings $appsettingsHash -ConnectionStrings $connections -Verbose
 
+    #Set the settings that were just uploaded to slot specific settings.
     Set-AzureRmWebAppSlotConfigName -Name $WebAppName -ResourceGroupName $ResourceGroup -AppSettingNames $appsettingsNames -ConnectionStringNames $connectionNames
 
     echo $results
