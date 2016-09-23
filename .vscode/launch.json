@@ -2,12 +2,15 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "PowerShell",
+            "name": "PowerShell AzureWebAppSlotManager",
             "type": "PowerShell",
             "request": "launch",
-            "program": "${file}",
+            "program": "${workspaceRoot}\\src\\tasks\\AzureWebAppSlotManager\\UpdateAzureRMWebAppSetings.ps1",
             "args": [],
-            "cwd": "${file}"
+            "cwd": "${file}",
+            "env":{
+                "INPUT_WEBAPPNAME":"maserati-na-flow-api"
+            }
         }
     ]
 }

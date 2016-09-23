@@ -16,7 +16,7 @@
   "version": {
     "Major": "2",
     "Minor": "0",
-    "Patch": "114"
+    "Patch": "122"
   },
   "minimumAgentVersion": "1.102.0",
   "instanceNameFormat": "AzureWebAppSettingsUpdater $(message)",
@@ -114,7 +114,7 @@
     },
     {
       "name": "SQLServerConnectionNames",
-      "type": "multiLine",
+      "type": "string",
       "label": "SQL Server Connection Names",
       "defaultValue": "",
       "required": true,
@@ -134,7 +134,7 @@
     },
     {
       "name": "MySQLConnectionNames",
-      "type": "multiLine",
+      "type": "string",
       "label": "MySQL Connection Names",
       "defaultValue": "",
       "required": true,
@@ -154,7 +154,7 @@
     },
     {
       "name": "AzureSQLConnectionNames",
-      "type": "multiLine",
+      "type": "string",
       "label": "Azure SQL Connection Names",
       "defaultValue": "",
       "required": true,
@@ -174,7 +174,7 @@
     },
     {
       "name": "CustomTypeConnectionNames",
-      "type": "multiLine",
+      "type": "string",
       "label": "Custom Type Connection Names",
       "defaultValue": "",
       "required": true,

@@ -71,6 +71,30 @@ try {
     $appsettingsNames = @()
     $connections = @{}
     $connectionNames = @()
+    $WebAppNameWithSlot = ""
+
+    if(($slot -eq "production") -or ([string]::IsNullOrEmpty($Slot))){
+        $WebAppNameWithSlot = "{0}" -f $WebAppName
+    }
+    else {
+        $WebAppNameWithSlot = "{0}/slots/{1}" -f $WebAppName, $Slot
+    }
+
+    $webapp = Get-AzureRmWebApp -ResourceGroupName $ResourceGroup -Name $WebAppNameWithSlot
+    Write-Host "Current Web App"
+    $webapp
+    Write-Host "****************************************************"
+    Write-Host ""
+    Write-Host "Current Settings"
+    $webapp.SiteConfig.AppSettings
+    foreach($setting in $webapp.SiteConfig.AppSettings)
+    {
+        $appsettingsHash[$setting.Name] = $setting.value
+        $appsettingsNames = $appsettingsNames + $setting.Name
+    }
+
+    Write-Host "****************************************************"
+    Write-Host ""
 
     if ($UseAppsettings -eq "True") {
 
@@ -78,8 +102,16 @@ try {
         echo $configContent.configuration.appSettings.add
         foreach($setting in $configContent.configuration.appSettings.add)
         {
-            $appsettingsHash.Add($setting.key,$setting.value)
-            $appsettingsNames =$appsettingsNames + $setting.key
+            $currentKey = $setting.key
+            Write-Host "Adding Key $currentKey"
+            if ($appsettingsHash.ContainsKey($currentKey) -eq $false ) {
+                $appsettingsHash[$currentKey] = $setting.value
+                $appsettingsNames = $appsettingsNames + $currentKey
+            }
+            else {
+                
+                Write-Host "Key $currentKey exist already. "
+            }
         }
 
         write-host "Finished Appsettings"
@@ -89,8 +121,18 @@ try {
     if ($UseAppsettings -eq "true" -and $UseConnectionStrings -eq "true") {
         write-host "*****************************"
     }
-
+    Write-Host "****************************************************"
+    Write-Host ""
     
+    Write-Host "Current Conenctions strings"
+    $webapp.SiteConfig.ConnectionStrings
+    foreach($setting in $webapp.SiteConfig.ConnectionStrings)
+    {
+        #$connections.Add($setting.Name,$setting.ConnectionString)
+        
+        $connections[$setting.name] = @{Type = $setting.Type;Value = $setting.connectionString} 
+        $connectionNames = $connectionNames + $setting.Name
+    }
 
 
     if ($UseConnectionStrings -eq "true") {
@@ -98,33 +140,43 @@ try {
         echo $configContent.configuration.connectionStrings.add
         foreach($setting in $configContent.configuration.connectionStrings.add)
         {
-            $connectionType = "Custom"
+            $currenConnection = $setting.name
+           
+            if ($connections.ContainsKey($currenConnection) -eq $false) {
+                 Write-Host "Adding connection string: $currenConnection"
 
-            if ($UseSQLServerType -eq "true") {
-                if ($SQLServerConnectionNames.split(";").split(",").contains($setting.Name)) {
-                    $connectionType = "SqlServer"
+                $connectionType = "Custom"
+
+                if ($UseSQLServerType -eq "true") {
+                    if ($SQLServerConnectionNames.split(";").split(",").contains($setting.Name)) {
+                        $connectionType = "SqlServer"
+                    }
                 }
-            }
-            elseif ($UseAzureSQLType -eq "true") {
-                if ($AzureSQLConnectionNames.split(";").split(",").contains($setting.Name)) {
-                    $connectionType = "AzureSQL"
-                }            
-                
-            }
-            elseif ($UseMySqlType -eq "true") {
-                if ($MySQLConnectionNames.split(";").split(",").contains($setting.Name)) {
-                    $connectionType = "MySql"
+                elseif ($UseAzureSQLType -eq "true") {
+                    if ($AzureSQLConnectionNames.split(";").split(",").contains($setting.Name)) {
+                        $connectionType = "AzureSQL"
+                    }            
+                    
                 }
-                
-            }
-            elseif ($UseCustomType -eq "true") {
-                if ($CustomTypeConnectionNames.split(";").split(",").contains($setting.Name)) {
-                    $connectionType = "Custom"
-                }            
-                
-            }            
-            $connections[$setting.name] = @{Type = $connectionType;Value = $setting.connectionString}
-            $connectionNames = $connectionNames + $setting.name
+                elseif ($UseMySqlType -eq "true") {
+                    if ($MySQLConnectionNames.split(";").split(",").contains($setting.Name)) {
+                        $connectionType = "MySql"
+                    }
+                    
+                }
+                elseif ($UseCustomType -eq "true") {
+                    if ($CustomTypeConnectionNames.split(";").split(",").contains($setting.Name)) {
+                        $connectionType = "Custom"
+                    }
+                }
+            
+                $connections[$setting.name] = @{Type = $connectionType;Value = $setting.connectionString}
+                $connectionNames = $connectionNames + $setting.name
+
+            } else {
+                Write-Host "Skipping $currenConnection"
+            }           
+
         }
         write-host "Finished Parsing ConnectionString"
         echo $connections
@@ -134,9 +186,14 @@ try {
         throw new-object System.ArgumentException
     }
 
-    
+    Write-Host "****************************************************"
+    Write-Host ""   
+
     #Add the currect settings.
-    $results = Set-AzureRmWebAppSlot -Name $WebAppName -ResourceGroupName $ResourceGroup -Slot $Slot -AppSettings $appsettingsHash -ConnectionStrings $connections -Verbose
+    Write-Host "Update the settings"
+    Write-Host "AppsettingsHash Type $appsettingsHash.GetType()"
+    Write-Host "connections Type $connections.GetType()"
+    $results = Set-AzureRmWebAppSlot -Name $WebAppName -ResourceGroupName $ResourceGroup -Slot $Slot -AppSettings $appsettingsHash -ConnectionStrings $connections
 
     #Set the settings that were just uploaded to slot specific settings.
     Set-AzureRmWebAppSlotConfigName -Name $WebAppName -ResourceGroupName $ResourceGroup -AppSettingNames $appsettingsNames -ConnectionStringNames $connectionNames
